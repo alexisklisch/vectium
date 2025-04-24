@@ -1,12 +1,24 @@
 import { ReactNode, useState, useRef, useEffect } from 'react'
+import { useStore } from '../../utils/state'
 
 type ToolsOptions = ([] | ReactNode[] | ReactNode)[]
 
 export function SidebarTool ({ tools }: { tools: ToolsOptions }) {
+  const { device } = useStore()
   const [position, setPosition] = useState({ x: 20, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const sidebarRef = useRef<HTMLDivElement>(null)
+  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(device === 'mobile' ? 'horizontal' : 'vertical')
+
+  // Update direction based on device type
+  useEffect(() => {
+    if (device === 'mobile') {
+      setDirection('horizontal')
+    } else {
+      setDirection('vertical')
+    }
+  }, [device])
 
   // Función para centrar verticalmente el sidebar
   const centerVertically = () => {
@@ -68,7 +80,7 @@ export function SidebarTool ({ tools }: { tools: ToolsOptions }) {
   return (
     <aside
       ref={sidebarRef}
-      className='flex flex-col gap-3 w-min px-1.5 py-12 rounded-md absolute cursor-move shadow-lg'
+      className={`flex ${direction === 'vertical' ? 'flex-col py-12' : 'px-12'} gap-3 w-min px-1.5 rounded-md absolute cursor-move shadow-lg`}
       style={{
         backgroundImage: 'url(/api/grainy)',
         backgroundSize: 'cover',
@@ -85,18 +97,20 @@ export function SidebarTool ({ tools }: { tools: ToolsOptions }) {
           // Crea divs cada vez que es un array
           if (Array.isArray(element)) {
             return (
-              <div key={`group-${index}`} className='flex gap-0.5 [flex-direction:inherit]'>
-                {element.map((el: ReactNode, innerIndex) => (
-                  <div key={`item-${index}-${innerIndex}`}>
-                    {el}
-                  </div>
-                ))}
+              <div
+                key={`tool-group-${index}`}
+                className='flex gap-0.5 [flex-direction:inherit]'
+              >
+                {element}
               </div>
             )
           }
           // Si no es un array, solo devuelve el elemento
           return (
-            <div key={`item-${index}`} className='flex gap-1'>
+            <div
+              key={`tool-item-${index}`}
+              className='flex gap-1'
+            >
               {element}
             </div>
           )
